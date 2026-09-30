@@ -5,10 +5,11 @@
 ## パッケージと素材
 
 - `npm ci && npm run build && npm test` で確認します。
-- `npm run package` で `output/store/amazon-assist-1.1.4.zip` を作ります。ZIPのルートに `manifest.json` があり、MITライセンスを同梱します。
-- アイコン: `extension/icons/icon128.png`
+- `npm run package` で `output/store/amazon-assist-1.1.5.zip` を作ります。ZIPのルートに `manifest.json` があり、MITライセンスを同梱します。
+- ストア用アイコン（128×128、透過PNG）: `docs/store/icon128.png`。同じ画像を `extension/icons/receipt-month128.png` としてZIPにも同梱します。
+- アイコンの生成元と書き出し方法: [ICON.md](store/ICON.md)
 - 小さいプロモーション画像（440×280）: `docs/store/promo440.png`
-- スクリーンショット（1280×800）: `docs/store/screenshot1280.jpg`
+- スクリーンショット（1280×800）: `docs/store/screenshot1280-v115.png`。v1.1.5の初期画面をローカルプレビューで撮影。実注文データは含みません。
 - GitHubの公開範囲はPublicです。ストア申請は別の手続きです。
 
 ## 掲載情報
