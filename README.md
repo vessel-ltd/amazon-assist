@@ -8,6 +8,8 @@ Amazon.co.jpのひと月分の領収書・購入明細書を、ひとつのPDF�
 
 **[最新版をダウンロード](https://github.com/vessel-ltd/amazon-assist/releases/latest)** · [変更履歴](CHANGELOG.md) · [プライバシーポリシー](PRIVACY.md)
 
+[![自動テスト・配布ZIP検証](https://github.com/vessel-ltd/amazon-assist/actions/workflows/verify.yml/badge.svg)](https://github.com/vessel-ltd/amazon-assist/actions/workflows/verify.yml)
+
 ## インストール
 
 1. [最新版のリリース](https://github.com/vessel-ltd/amazon-assist/releases/latest)の **Assets** から `amazon-assist-バージョン.zip` をダウンロードします。
@@ -66,6 +68,8 @@ GitHubの「Code → Download ZIP」または `git clone` で入手した場合�
 | 専用タブでの読み取り・認証待ち | [worker.js](extension/worker.js)、[rendered.js](extension/rendered.js)、[reader-bridge.js](extension/reader-bridge.js) |
 | 対象月の抽出・領収書検証・印刷内容 | [core.js](extension/core.js)、[app.js](extension/app.js) |
 | 診断ログに含める情報 | [diagnostics.js](extension/diagnostics.js) |
+
+配布ZIPも自動テストの対象です。ZIPを展開した状態で、架空の注文と模擬Chrome APIによる起動から印刷要求までを確認します。これは実ChromeでのPDF保存を保証するものではありません。自動確認の範囲と実Chromeの確認手順は [リリースガイド](docs/RELEASING.md) に記載しています。
 
 ## うまく動かないとき
 

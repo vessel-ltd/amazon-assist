@@ -16,6 +16,8 @@ Node.js 22以上で次を実行します。
 npm ci
 npm run build
 npm test
+npm run package
+npm run test:package
 ```
 
 `extension/reader-content.js` は生成ファイルです。`core.js`、`rendered.js`、`reader-bridge.js` を変更したらビルドして生成ファイルも含めます。
@@ -24,7 +26,7 @@ npm test
 
 ## リリース時の確認
 
-利用者がビルドせずに導入できることを維持します。リリースには `npm run package` で生成したインストール用ZIPを添付し、次を確認してください。
+利用者がビルドせずに導入できることを維持します。ZIP生成にはPython 3も使います。リリースには `npm run package` で生成したインストール用ZIPを添付し、次を確認してください。
 
 - ZIPのルートに `manifest.json` があり、アイコン・生成済みスクリプト・MITライセンスが同梱されている。
 - 実注文データ、診断ログ、テスト依存を含まない。
@@ -32,6 +34,8 @@ npm test
 - READMEのダウンロード・インストール・更新手順が、そのZIPで実行できる。
 
 実Chromeで通し確認した範囲と、自動テストのみの範囲は、リリース説明で区別してください。
+
+mainへのpushとPRではGitHub Actionsがテスト・ZIP作成・展開済みZIPの起動から印刷要求までを自動確認します。後者は模擬Chrome APIを使い、実際のPDF保存は行いません。バージョンタグへのpushでは、確認に成功するとZIPとチェックサム付きのリリース下書きを作成します。詳しい公開手順と実Chromeの確認項目は [リリースガイド](docs/RELEASING.md) を参照してください。
 
 ## ライセンス
 
