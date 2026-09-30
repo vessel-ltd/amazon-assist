@@ -2,7 +2,7 @@
 
 更新日: 2026年9月30日
 
-対象: Amazon 月別領収書（非公式）、提供者: Vessel Ltd.（Vessel合同会社）
+対象: Amazon 月別領収書、提供者: Vessel Ltd.（Vessel合同会社）
 
 本拡張は、Amazon.co.jpの注文履歴から指定した月の領収書・購入明細書をまとめ、利用者がPDFとして保存するためのツールです。Amazonの公式製品ではなく、Amazonとの提携・承認を意味しません。
 

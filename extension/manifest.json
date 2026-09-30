@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
-  "name": "Amazon 月別領収書（非公式）",
-  "version": "1.1.5",
+  "name": "Amazon 月別領収書",
+  "version": "1.1.6",
   "description": "Amazon.co.jpの注文を月単位でまとめてPDFに保存します。",
   "host_permissions": ["https://www.amazon.co.jp/*"],
   "action": {"default_title": "Amazon 月別領収書", "default_icon":{"16":"icons/receipt-month16.png","32":"icons/receipt-month32.png"}},

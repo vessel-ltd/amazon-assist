@@ -1,11 +1,11 @@
 # Chromeウェブストア申請ガイド
 
-この文書は申請用の下書きです。ストアにはまだ掲載・申請していません。
+この文書は申請用の下書きです。ストアのアイテムはドラフトで、審査への提出・公開はまだ完了していません。
 
 ## パッケージと素材
 
 - `npm ci && npm run build && npm test` で確認します。
-- `npm run package` で `output/store/amazon-assist-1.1.5.zip` を作ります。ZIPのルートに `manifest.json` があり、MITライセンスを同梱します。
+- `npm run package` で `output/store/amazon-assist-1.1.6.zip` を作ります。ZIPのルートに `manifest.json` があり、MITライセンスを同梱します。
 - ストア用アイコン（128×128、透過PNG）: `docs/store/icon128.png`。同じ画像を `extension/icons/receipt-month128.png` としてZIPにも同梱します。
 - アイコンの生成元と書き出し方法: [ICON.md](store/ICON.md)
 - 小さいプロモーション画像（440×280）: `docs/store/promo440.png`
@@ -14,7 +14,7 @@
 
 ## 掲載情報
 
-名前: Amazon 月別領収書（非公式）
+名前: Amazon 月別領収書
 
 短い説明:
 
