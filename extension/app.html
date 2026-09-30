@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="ja">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Amazon 月別領収書</title><link rel="stylesheet" href="app.css"></head>
+<body>
+  <main class="panel">
+    <div class="eyebrow">自分用 · AMAZON.CO.JP · v1.1.3</div>
+    <h1>月別領収書</h1>
+    <p class="intro">ひと月分の領収書・購入明細書を、ひとつのPDFに。</p>
+    <form id="export-form">
+      <label for="month">出力する年月</label>
+      <div class="controls"><input id="month" type="month" required><button id="export" type="submit">領収書／購入明細書出力</button><button id="cancel" type="button" hidden>中止</button></div>
+    </form>
+    <p id="status" role="status" aria-live="polite">AmazonにログインしたChromeでお使いください。</p>
+    <progress id="progress" hidden></progress>
+    <div id="error" role="alert" hidden></div>
+    <button id="print" type="button" hidden>PDFに保存（印刷画面を開く）</button>
+    <button id="diagnostics" type="button" hidden>診断ログを保存</button>
+    <p class="note">診断ログには対象年月・注文番号・取得段階・ページ構造の件数を記録します。住所・商品名・金額・支払い情報・ページ本文は含めません。保存は手動で、外部送信はしません。印刷画面を開いた記録は残りますが、PDF保存の完了は検知できません。</p>
+    <p class="note">注文日を基準に抽出します。印刷画面の送信先は「PDFに保存」、用紙は「A4」を選択してください。<br>注文情報と診断ログは画面を閉じると破棄します。手動で保存したPDF・診断ログは残ります。</p>
+    <a href="https://www.amazon.co.jp/your-orders/orders" target="_blank" rel="noreferrer">Amazonの注文履歴を開く ↗</a>
+  </main>
+  <iframe id="preview" title="領収書の印刷プレビュー" sandbox="allow-same-origin allow-modals" hidden></iframe>
+  <script type="module" src="app.js"></script>
+</body></html>

@@ -1,0 +1,20 @@
+// Optional local-only smoke test. tmp/ contains private data and is gitignored.
+import fs from 'node:fs/promises';
+import {JSDOM} from 'jsdom';
+import {parseOrders,parseReceipt,reportHTML} from '../extension/core.js';
+import {execFileSync} from 'node:child_process';
+import assert from 'node:assert/strict';
+const document=html=>new JSDOM(html).window.document;
+const orders=parseOrders(document(await fs.readFile('tmp/fixtures/orders.html','utf8')),'https://www.amazon.co.jp/your-orders/orders?timeFilter=year-2026','2026-08');
+console.log('August orders in captured DOM:',orders.orders.length);
+const reference=execFileSync('pdftotext',['Amazon領収書_2026-08.pdf','-'],{encoding:'utf8'});
+const referenceIds=[...new Set(reference.match(/[A-Z0-9]{3}-\d{7}-\d{7}/g))].sort();
+assert.deepEqual(orders.orders.map(o=>o.id).sort(),referenceIds);
+console.log('All order IDs match the reference PDF.');
+const receiptDocument=document(await fs.readFile('tmp/fixtures/receipt.html','utf8'));
+const receiptId=receiptDocument.querySelector('#orderDetails').textContent.match(/[A-Z0-9]{3}-\d{7}-\d{7}/)[0];
+const receipt=parseReceipt(receiptDocument,{id:receiptId});
+await fs.writeFile('tmp/fixtures/preview.html',reportHTML([receipt],'2026-09'));
+console.log('Real receipt parsed; preview created.');
+const august=parseReceipt(document(await fs.readFile('tmp/fixtures/receipt-aug.html','utf8')),{id:orders.orders[0].id});
+await fs.writeFile('tmp/fixtures/preview-aug.html',reportHTML([august],'2026-08'));
