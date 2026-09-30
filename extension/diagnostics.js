@@ -1,5 +1,5 @@
 // Only explicitly selected fields can leave memory in the diagnostic download.
-export const VERSION='1.1.3';
+export const VERSION='1.1.4';
 export function errorCode(error) {
   if(error?.name==='AbortError') return 'cancelled';
   const text=String(error?.message || '');

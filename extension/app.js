@@ -42,8 +42,8 @@ $('export-form').onsubmit = async event => {
   diagnostic=new DiagnosticLog(month);stage='start';currentOrder=undefined;
   diagnostic.add('started',{stage});$('diagnostics').hidden=true;
   try {
-    if (!globalThis.chrome?.runtime?.id) throw new Error('ファイルを直接開くと動作しません。Chromeの拡張機能メニューから「Amazon 月別領収書（自分用）」を開いてください。');
-    if (chrome.runtime.getManifest().version!==VERSION) throw new Error('Chromeには古い取得処理が残っています。chrome://extensionsで「Amazon 月別領収書（自分用）」の再読み込みボタンを押し、拡張を開き直してください。');
+    if (!globalThis.chrome?.runtime?.id) throw new Error('ファイルを直接開くと動作しません。Chromeの拡張機能メニューから「Amazon 月別領収書（非公式）」を開いてください。');
+    if (chrome.runtime.getManifest().version!==VERSION) throw new Error('Chromeには古い取得処理が残っています。chrome://extensionsで「Amazon 月別領収書（非公式）」の再読み込みボタンを押し、拡張を開き直してください。');
     reader=new RenderedAmazonReader(chrome.tabs,controller.signal,{},(event,fields)=>diagnostic.add(event,{...fields,stage}));
     const {year}=parseMonth(month);
     stage='orders';

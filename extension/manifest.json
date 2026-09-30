@@ -1,10 +1,12 @@
 {
   "manifest_version": 3,
-  "name": "Amazon 月別領収書（自分用）",
-  "version": "1.1.3",
+  "name": "Amazon 月別領収書（非公式）",
+  "version": "1.1.4",
   "description": "Amazon.co.jpの注文を月単位でまとめてPDFに保存します。",
   "host_permissions": ["https://www.amazon.co.jp/*"],
   "action": {"default_title": "Amazon 月別領収書"},
+  "icons": {"16":"icons/icon16.png","32":"icons/icon32.png","48":"icons/icon48.png","128":"icons/icon128.png"},
+  "homepage_url": "https://github.com/vessel-ltd/amazon-assist",
   "background": {"service_worker": "background.js"},
   "content_scripts": [{"matches":["https://www.amazon.co.jp/*"],"js":["reader-content.js"],"run_at":"document_idle"}],
   "content_security_policy": {"extension_pages": "script-src 'self'; object-src 'none'; style-src 'self' 'unsafe-inline' https://m.media-amazon.com; img-src 'self' data: https://m.media-amazon.com https://images-fe.ssl-images-amazon.com https://images-na.ssl-images-amazon.com; font-src 'self' https://m.media-amazon.com; connect-src https://www.amazon.co.jp"}
