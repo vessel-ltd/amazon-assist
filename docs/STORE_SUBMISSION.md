@@ -1,6 +1,8 @@
 # Chromeウェブストア申請ガイド
 
-この文書は申請用の下書きです。ストアのアイテムはドラフトで、審査への提出・公開はまだ完了していません。
+Chromeウェブストアで公開済みです: https://chromewebstore.google.com/detail/mgikojncbdnfamlffbccaeemmdchmjpo
+
+この文書は、ストア用パッケージの作成手順と掲載情報の控えです。
 
 ## パッケージと素材
 

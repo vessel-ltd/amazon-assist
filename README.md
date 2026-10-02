@@ -2,15 +2,29 @@
 
 Amazon.co.jpのひと月分の領収書・購入明細書を、ひとつのPDFにまとめるChrome拡張です。年月を選んで出力できます。
 
-**GitHubから入手し、自分のChromeへローカルインストールして使うために公開しています。** インストール用ZIPはビルド済みなので、利用するだけならGit・Node.js・Pythonは不要です。現在、Chromeウェブストアには掲載されていません。
+**[Chromeウェブストア](https://chromewebstore.google.com/detail/mgikojncbdnfamlffbccaeemmdchmjpo)からインストールできます。** ストア版は自動で更新されます。GitHubのリリースZIPから手動でインストールすることもできます。
 
 ソースコードもMITライセンスで公開しています。注文情報の扱いを確認でき、必要に応じて自分で修正して使い続けられます。Vessel合同会社が提供する非公式ツールで、Amazonとの提携・承認を意味しません。
 
-**[最新版をダウンロード](https://github.com/vessel-ltd/amazon-assist/releases/latest)** · [変更履歴](CHANGELOG.md) · [プライバシーポリシー](PRIVACY.md)
+**[Chromeウェブストアで入手](https://chromewebstore.google.com/detail/mgikojncbdnfamlffbccaeemmdchmjpo)** · [ZIPをダウンロード](https://github.com/vessel-ltd/amazon-assist/releases/latest) · [変更履歴](CHANGELOG.md) · [プライバシーポリシー](PRIVACY.md)
 
 [![自動テスト・配布ZIP検証](https://github.com/vessel-ltd/amazon-assist/actions/workflows/verify.yml/badge.svg)](https://github.com/vessel-ltd/amazon-assist/actions/workflows/verify.yml)
 
 ## インストール
+
+1. [Chromeウェブストアの掲載ページ](https://chromewebstore.google.com/detail/mgikojncbdnfamlffbccaeemmdchmjpo)を、インストールしたいChromeプロファイルで開きます。
+2. 「Chromeに追加」を押します。
+3. 拡張機能メニューから「Amazon 月別領収書」を開きます。ピン留めしておくと次回から開きやすくなります。
+
+複数のChromeプロファイルで使う場合は、それぞれで追加してください。対象になるのは、そのプロファイルでログインしたAmazonアカウントの注文です。
+
+公開から間もないため、`chrome://extensions` に「この拡張機能は、セーフ ブラウジング保護強化機能で信頼されていません」と表示される場合があります。Chromeが新しい公開者に付ける表示で、拡張の不具合や危険性が検出されたという意味ではありません。
+
+以前にZIPから手動でインストールしていた場合は、ストア版を追加したあと、手動で入れた方を `chrome://extensions` から削除してください。両方を残すと、同じ拡張が2つ表示されます。
+
+### ZIPから手動でインストールする場合
+
+ストアを使わずに入れたい場合や、ストアの審査待ちの新しい版を先に使いたい場合の方法です。
 
 1. [最新版のリリース](https://github.com/vessel-ltd/amazon-assist/releases/latest)の **Assets** から `amazon-assist-バージョン.zip` をダウンロードします。
 2. ZIPを展開し、普段使うフォルダーへ置きます。例: `Documents/amazon-assist`。Chromeはそのフォルダーを継続して読み込むため、インストール後も移動・削除しないでください。
@@ -18,9 +32,9 @@ Amazon.co.jpのひと月分の領収書・購入明細書を、ひとつのPDF�
 4. 「パッケージ化されていない拡張機能を読み込む」を押し、展開した **`manifest.json` が直接入っているフォルダー** を選択します。
 5. 拡張機能メニューから「Amazon 月別領収書」を開きます。ピン留めしておくと次回から開きやすくなります。
 
-ZIPは展開してから読み込みます。`app.html` を直接開く方法では注文を取得できません。複数のChromeプロファイルで使う場合は、それぞれで拡張を読み込んでください。対象になるのは、そのプロファイルでログインしたAmazonアカウントの注文です。
+ZIPは展開してから読み込みます。`app.html` を直接開く方法では注文を取得できません。複数のChromeプロファイルで使う場合は、それぞれで拡張を読み込んでください。
 
-### ソースから読み込む場合
+#### ソースから読み込む場合
 
 GitHubの「Code → Download ZIP」または `git clone` で入手した場合は、リポジトリ内の **`extension/` フォルダー** を選択します。リリースのインストール用ZIPとはフォルダー構成が異なります。どちらも `manifest.json` が直接入っているフォルダーを選べば読み込めます。生成済みのファイルを含むので、変更せず使う場合はビルド不要です。
 
@@ -38,7 +52,9 @@ GitHubの「Code → Download ZIP」または `git clone` で入手した場合�
 
 ## 更新方法
 
-ローカルインストールした拡張は、自動更新されません。
+Chromeウェブストアからインストールした場合は、Chromeが自動で更新します。新しい版は審査を経てストアに反映されるため、GitHubのリリースより遅れる場合があります。
+
+ZIPやソースから手動でインストールした拡張は、自動更新されません。次の手順で更新します。
 
 1. [変更履歴](CHANGELOG.md)を確認し、新しいリリースのZIPをダウンロード・展開します。
 2. 拡張の画面と取得中のタブを閉じ、登録済みフォルダーの拡張ファイルを新しいファイルで置き換えます。フォルダーの場所は変えません。
@@ -83,7 +99,7 @@ GitHubの「Code → Download ZIP」または `git clone` で入手した場合�
 
 このプロジェクトは、月別の領収書・購入明細書をまとめてPDF保存する小さなツールとして維持します。不具合報告・修正PRを歓迎しますが、すべての注文形式への対応や即時修正を約束するものではありません。
 
-開発、テスト、コントリビューションの手順は [CONTRIBUTING.md](CONTRIBUTING.md) にあります。Chromeウェブストアへの申請は今後の配布方法のひとつです。申請用ZIPの生成と掲載用素材は [ストア申請ガイド](docs/STORE_SUBMISSION.md) を参照してください。
+開発、テスト、コントリビューションの手順は [CONTRIBUTING.md](CONTRIBUTING.md) にあります。ストア用ZIPの生成と掲載情報は [ストア申請ガイド](docs/STORE_SUBMISSION.md) を参照してください。
 
 ## ライセンス
 
