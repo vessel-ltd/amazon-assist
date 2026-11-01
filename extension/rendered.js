@@ -1,10 +1,10 @@
-import {checkDocument,parseOrderDate,renderedText} from './core.js';
+import {checkDocument,findNextLink,parseOrderDate,receiptRoot,renderedText} from './core.js';
 
 // Structural facts only: never include text, URLs, attributes, or payment data.
 export function pageDiagnostics(doc,orderId) {
   const native=doc.querySelectorAll('.js-order-card');
   const cards=[...(native.length?native:doc.querySelectorAll('.order-card'))];
-  const main=doc.querySelector('#orderDetails') || doc.querySelector('[role="main"]');
+  const main=receiptRoot(doc);
   const text=main?renderedText(main):'';
   const payment=main?.querySelector('[data-component="viewPaymentPlanSummaryWidget"]');
   return {
@@ -40,11 +40,13 @@ export function captureRendered(doc, kind, orderId) {
       clone.querySelectorAll('script,style,template,noscript').forEach(n=>n.remove());
       return `<div class="order-card js-order-card">${clone.outerHTML}</div>`;
     }).join('');
-    const next=[...doc.querySelectorAll('a[href]')].find(a=>/^(次へ|Next\b)/i.test(a.textContent.trim()) || /^(次のページ|Next page)$/i.test(a.getAttribute('aria-label') || ''));
-    return {ready:true,html:html+(next ? next.outerHTML : '')};
+    const next=findNextLink(doc);
+    // Keep the pager structure so the receiving parser recognises icon-only links.
+    const pager=next ? `<ul class="a-pagination"><li class="a-last">${next.outerHTML}</li></ul>` : '';
+    return {ready:true,html:html+pager};
   }
   if (kind === 'receipt') {
-    const main=doc.querySelector('#orderDetails') || doc.querySelector('[role="main"]');
+    const main=receiptRoot(doc);
     if (!main) return {ready:false,reason:'領収書の表示を待っています。'};
     const text=renderedText(main);
     if (!text.includes(orderId) || !/領収書|購入明細書|注文概要/.test(text) || !/[￥¥]\s*[\d,]+/.test(text)) return {ready:false,reason:'領収書の内容の表示を待っています。'};

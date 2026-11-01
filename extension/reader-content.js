@@ -43,6 +43,38 @@ function renderedText(element) {
   clone.querySelectorAll('script,style,template,noscript').forEach(node=>node.remove());
   return clone.textContent;
 }
+// Only the order-history pager counts. Amazon also renders "次へ" controls for
+// recommendation carousels (href="#"); following those re-reads the same page.
+// An active pager whose next link cannot be navigated fails closed instead of
+// being treated as the last page.
+const NOT_PAGER = '.a-carousel-container,.a-carousel,[data-a-carousel-options]';
+const isNextLabel = a => /^(次へ|Next\b)/i.test(a.textContent.trim()) || /^(次のページ|Next page)$/i.test(a.getAttribute('aria-label') || '');
+const isDisabled = el => !!el.closest('.a-disabled,[aria-disabled="true"]');
+const isUsableLink = a => {
+  const href = (a.getAttribute('href') || '').trim();
+  return !!href && !href.startsWith('#') && !/^javascript:/i.test(href) && !isDisabled(a);
+};
+const unusableNext = () => new Error('次ページのリンク形式を確認できませんでした。');
+function findNextLink(doc) {
+  const pagers = [...doc.querySelectorAll('.a-pagination')].filter(p => !p.closest(NOT_PAGER));
+  if (pagers.length) {
+    for (const pager of pagers) {
+      const last = pager.querySelector('.a-last');
+      if (last && isDisabled(last)) continue;
+      // Without AUI's .a-last slot, accept only an explicit 次へ/Next link in this pager.
+      const link = last ? last.querySelector('a') : [...pager.querySelectorAll('a')].find(isNextLabel);
+      if (link && isUsableLink(link)) return link;
+      if (link && isDisabled(link)) continue;
+      throw unusableNext();
+    }
+    return null;
+  }
+  const labelled = [...doc.querySelectorAll('a')].filter(a => isNextLabel(a) && !a.closest(NOT_PAGER) && !isDisabled(a));
+  if (!labelled.length) return null;
+  const usable = labelled.find(isUsableLink);
+  if (usable) return usable;
+  throw unusableNext();
+}
 function parseOrders(doc, base, monthValue) {
   checkDocument(doc);
   const {year, month} = parseMonth(monthValue);
@@ -69,7 +101,7 @@ function parseOrders(doc, base, monthValue) {
   if (!cards.length && !/注文はありません|注文がありません|0件の注文|注文された商品はありません|注文が見つかりません/.test(doc.body.textContent)) {
     throw new Error('注文一覧を取得できませんでした。ログイン状態をご確認ください。');
   }
-  const next = [...doc.querySelectorAll('a[href]')].find(a => /^(次へ|Next\b)/i.test(a.textContent.trim()) || /^(次のページ|Next page)$/i.test(a.getAttribute('aria-label') || ''));
+  const next = findNextLink(doc);
   const nextURL = next ? amazonURL(next.getAttribute('href'), base) : null;
   if (nextURL && !new URL(nextURL).pathname.startsWith('/your-orders/orders') && !new URL(nextURL).pathname.startsWith('/gp/your-account/order-history')) throw new Error('次ページのリンク形式を確認できませんでした。');
   return {orders, next: nextURL, signature: cards.map(c => renderedText(c.querySelector('.order-header') || c)).join('|')};
@@ -89,12 +121,17 @@ function orderPrintURL(order) {
 const allowedAsset = value => {
   try { const u = new URL(value, ORIGIN); return u.protocol === 'https:' && ['m.media-amazon.com','images-fe.ssl-images-amazon.com','images-na.ssl-images-amazon.com'].includes(u.hostname) ? u.href : null; } catch { return null; }
 };
+// Normal orders render in #orderDetails. Amazon Fresh orders redirect the print
+// URL to /uff/your-account/order-details/printable, which uses #ufpo-od-main-section.
+function receiptRoot(doc) {
+  return doc.querySelector('#orderDetails') || doc.querySelector('#ufpo-od-main-section') || doc.querySelector('[role="main"]');
+}
 function parseReceipt(doc, order) {
   checkDocument(doc);
-  const main = doc.querySelector('#orderDetails') || doc.querySelector('[role="main"]');
+  const main = receiptRoot(doc);
   if (!main || !main.textContent.includes(order.id) || !/領収書|購入明細書|注文概要/.test(main.textContent)) throw new Error('領収書の内容を確認できませんでした。');
   const root = main.cloneNode(true);
-  root.querySelectorAll('script,iframe,object,embed,base,link,meta,form,button,input,svg,video,audio,[data-component="saveButton"],[data-component="saveButtonMobile"],.printOD-hide-print').forEach(e=>e.remove());
+  root.querySelectorAll('script,iframe,object,embed,base,link,meta,form,button,input,svg,video,audio,[data-component="saveButton"],[data-component="saveButtonMobile"],.printOD-hide-print,.do-not-print').forEach(e=>e.remove());
   for (const el of [root,...root.querySelectorAll('*')]) {
     for (const attr of [...el.attributes]) {
       if (/^on/i.test(attr.name) || ['srcdoc','srcset','action','formaction','nonce'].includes(attr.name)) el.removeAttribute(attr.name);
@@ -130,7 +167,7 @@ function reportHTML(receipts, month) {
   return `<!doctype html><html lang="ja"><head><meta charset="utf-8"><title>Amazon領収書_${month}</title>${styles.map(s=>`<link rel="stylesheet" href="${escape(s)}">`).join('')}<style>
     html,body{background:#fff!important;margin:0!important;min-width:0!important;color:#0f1111;font-family:Arial,"Meiryo",sans-serif;font-size:13px}
     .receipt{padding:22mm 8mm 10mm;max-width:210mm;margin:auto;box-sizing:border-box}
-    .receipt #orderDetails{width:100%!important;min-width:0!important;max-width:none!important;margin:0!important}
+    .receipt #orderDetails,.receipt #ufpo-od-main-section{width:100%!important;min-width:0!important;max-width:none!important;margin:0!important}
     .receipt .a-cardui{padding:0!important}.receipt .a-cardui-deck{margin:0!important}
     .printOD-hide-print,.a-hidden{display:none!important}h1{font-size:24px!important}a{color:#216baf;text-decoration:none}img{max-width:100%}
     .receipt .aa-summary-layout{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:18px;padding-right:0!important}
@@ -145,6 +182,8 @@ function reportHTML(receipts, month) {
     .receipt .od-line-item-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px}
     .receipt .od-line-item-row>.a-column{width:auto!important;float:none!important;margin:0!important;min-width:0}
     .receipt .od-line-item-row-label{overflow-wrap:anywhere}.receipt .od-line-item-row-content{white-space:nowrap;text-align:right}
+    .receipt .ufpo-item-list-table{overflow:visible!important;max-width:none!important}
+    .receipt .ufpo-item-list-table>.a-row,.receipt .ufpo-item-list-table>.a-divider-normal{min-width:0!important}
     .receipt .aa-shipment-wide{padding-right:0!important}
     .receipt .aa-shipment-wide>[data-component="shipmentsLeftGrid"]>.a-col-left{width:100%!important;float:none!important;padding:0!important;margin:0!important}
     @page{size:A4;margin:12mm}
@@ -157,7 +196,7 @@ async function collectOrders(firstURL, month, load, progress, signal) {
   let url = firstURL;
   while (url) {
     signal?.throwIfAborted();
-    const key = new URL(url); key.searchParams.delete('ref_');
+    const key = new URL(url); key.searchParams.delete('ref_'); key.searchParams.delete('language'); key.hash = '';
     if (pages.has(key.href) || pages.size >= 200) throw new Error('注文一覧のページ送りが繰り返されました。出力を中止しました。');
     pages.add(key.href);
     progress(`注文一覧を確認しています（${pages.size}ページ目）`);
@@ -176,7 +215,7 @@ async function collectOrders(firstURL, month, load, progress, signal) {
 function pageDiagnostics(doc,orderId) {
   const native=doc.querySelectorAll('.js-order-card');
   const cards=[...(native.length?native:doc.querySelectorAll('.order-card'))];
-  const main=doc.querySelector('#orderDetails') || doc.querySelector('[role="main"]');
+  const main=receiptRoot(doc);
   const text=main?renderedText(main):'';
   const payment=main?.querySelector('[data-component="viewPaymentPlanSummaryWidget"]');
   return {
@@ -212,11 +251,13 @@ function captureRendered(doc, kind, orderId) {
       clone.querySelectorAll('script,style,template,noscript').forEach(n=>n.remove());
       return `<div class="order-card js-order-card">${clone.outerHTML}</div>`;
     }).join('');
-    const next=[...doc.querySelectorAll('a[href]')].find(a=>/^(次へ|Next\b)/i.test(a.textContent.trim()) || /^(次のページ|Next page)$/i.test(a.getAttribute('aria-label') || ''));
-    return {ready:true,html:html+(next ? next.outerHTML : '')};
+    const next=findNextLink(doc);
+    // Keep the pager structure so the receiving parser recognises icon-only links.
+    const pager=next ? `<ul class="a-pagination"><li class="a-last">${next.outerHTML}</li></ul>` : '';
+    return {ready:true,html:html+pager};
   }
   if (kind === 'receipt') {
-    const main=doc.querySelector('#orderDetails') || doc.querySelector('[role="main"]');
+    const main=receiptRoot(doc);
     if (!main) return {ready:false,reason:'領収書の表示を待っています。'};
     const text=renderedText(main);
     if (!text.includes(orderId) || !/領収書|購入明細書|注文概要/.test(text) || !/[￥¥]\s*[\d,]+/.test(text)) return {ready:false,reason:'領収書の内容の表示を待っています。'};

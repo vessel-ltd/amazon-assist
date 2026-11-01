@@ -55,3 +55,46 @@ test('generated Chrome bridge checks sender and navigation token',async()=>{
   listener({type:'AA_CAPTURE',token:'test',kind:'orders'},{id:'our-extension'},r=>response=r);
   assert.equal(response.ready,true);assert.match(response.html,/0件/);
 });
+test('Amazon Fresh printable order details are captured and exclude the navbar cart',async()=>{
+  const {parseReceipt,reportHTML}=await import('../extension/core.js');
+  // Structure mirrors /uff/your-account/order-details/printable; all values are synthetic.
+  const html=`<link rel="stylesheet" href="https://m.media-amazon.com/images/I/01+sD8W7ffL.css?AUIClients/UltraFastPrintableOrderDetailAssets">
+    <header id="navbar-main"><div id="nav-flyout-ewc"><span>SYNTHETIC_CART_ITEM ￥9,999</span></div></header>
+    <div id="ufpo-od-background" class="a-section"><div id="ufpo-od-main-section" class="a-section ufpo-order-details-page-only">
+      <div id="printable-order-header"><h2>注文の詳細</h2><span>注文番号: ${id}</span><span>2026年10月19日 08:53に注文済み</span>
+        <span id="ufpo-save-order-details-button" class="a-button do-not-print"><input type="submit"><span>注文の詳細を保存</span></span></div>
+      <div id="order-summary"><h2>注文概要</h2><dl><dt>ご請求額：</dt><dd>￥7,666</dd></dl>
+        <div class="pmts-payment-instrument-billing-address">SYNTHETIC_CARD 下4桁 0000</div></div>
+      <div id="item-list"><h2>注文に含まれる商品 (1)</h2><img src="https://m.media-amazon.com/images/I/x._SS55_.jpg"><a href="/gp/product/B000000000">SYNTHETIC_ITEM</a> ￥213</div>
+    </div></div>`;
+  const live=document(html);
+  const captured=captureRendered(live,'receipt',id);
+  assert.equal(captured.ready,true);
+  assert.doesNotMatch(captured.html,/SYNTHETIC_CART_ITEM/);
+  const receipt=parseReceipt(document(captured.html),{id});
+  assert.match(receipt.html,/SYNTHETIC_ITEM/);assert.match(receipt.html,/￥7,666/);
+  assert.doesNotMatch(receipt.html,/注文の詳細を保存|SYNTHETIC_CART_ITEM|href=/);
+  assert.equal(receipt.styles.length,1);
+  const report=reportHTML([receipt],'2026-10');
+  assert.match(report,/ufpo-od-main-section/);
+  // Amazon's Fresh CSS gives item rows min-width:940px inside overflow-x:auto,
+  // which clips the price column on A4. The report must undo both.
+  assert.match(report,/\.receipt \.ufpo-item-list-table\{overflow:visible!important;max-width:none!important\}/);
+  assert.match(report,/\.receipt \.ufpo-item-list-table>\.a-row,\.receipt \.ufpo-item-list-table>\.a-divider-normal\{min-width:0!important\}/);
+});
+test('icon-only pager links survive capture and are followed',async()=>{
+  const {parseOrders}=await import('../extension/core.js');
+  const live=document(`<div class="js-order-card"><div class="order-header">注文日 2026年8月31日<a href="/your-orders/invoice/popover?orderId=${id}">領収書等</a></div></div>
+    <div class="a-carousel-container"><a href="#">次へ</a></div>
+    <ul class="a-pagination"><li class="a-last"><a href="/your-orders/orders?timeFilter=year-2026&page=1"><span aria-hidden="true">→</span></a></li></ul>`);
+  const captured=captureRendered(live,'orders');
+  assert.equal(captured.ready,true);
+  assert.match(parseOrders(document(captured.html),'https://www.amazon.co.jp/your-orders/orders?timeFilter=year-2026','2026-08').next,/page=1/);
+  assert.throws(()=>captureRendered(document(`<div class="js-order-card"><div class="order-header">注文日 2026年8月31日</div></div><ul class="a-pagination"><li class="a-last"><a href="#">次へ</a></li></ul>`),'orders'),/次ページのリンク形式/);
+});
+test('a pager without .a-last survives capture',async()=>{
+  const {parseOrders}=await import('../extension/core.js');
+  const live=document(`<div class="js-order-card"><div class="order-header">注文日 2026年8月31日<a href="/your-orders/invoice/popover?orderId=${id}">領収書等</a></div></div><ul class="a-pagination"><li><a href="?page=2">次へ</a></li></ul>`);
+  const captured=captureRendered(live,'orders');
+  assert.match(parseOrders(document(captured.html),'https://www.amazon.co.jp/your-orders/orders?timeFilter=year-2026','2026-08').next,/page=2/);
+});

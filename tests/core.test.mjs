@@ -61,3 +61,33 @@ test('missing invoice popover does not prevent trying the official print page',(
   assert.equal(orderPrintURL(order),`https://www.amazon.co.jp/gp/css/summary/print.html?orderID=${id}`);
   assert.throws(()=>orderPrintURL({id:'bad&orderID=other'}));
 });
+test('carousel and disabled "次へ" controls are not followed as pagination',async()=>{
+  const carousel='<div class="a-carousel-container"><a class="a-carousel-goto-nextpage" href="#"><span class="a-icon-alt">次へ</span></a></div>';
+  const pager=n=>`<ul class="a-pagination"><li class="a-last"><a href="/your-orders/orders?timeFilter=year-2026&language=ja_JP&page=${n}&ref_=ppx_yo2ov_dt_b_pagination_${n}_${n+1}">次へ<span>→</span></a></li></ul>`;
+  const last='<ul class="a-pagination"><li class="a-disabled a-last"><a href="/your-orders/orders?timeFilter=year-2026&language=ja_JP&page=1">次へ</a></li></ul>';
+  const pages=[doc(carousel+card('2026年9月1日')+pager(1)),doc(carousel+card()+last)];
+  const loaded=[];
+  const orders=await collectOrders(base,'2026-08',async url=>{loaded.push(url);return pages.shift();},()=>{});
+  assert.equal(orders.length,1);assert.equal(loaded.length,2);assert.match(loaded[1],/page=1/);
+});
+test('hash-only next links are detected as repeats instead of re-reading a stale page',async()=>{
+  let count=0;
+  await assert.rejects(collectOrders(base,'2026-08',async()=>{count++;return doc(card()+'<a href="?timeFilter=year-2026&language=ja_JP#x">次へ</a>');},()=>{}),/ページ送りが繰り返/);
+  assert.equal(count,1);
+});
+test('an active pager or next link that cannot be navigated fails closed',()=>{
+  for(const href of ['#','#page-2','javascript:void(0)']) {
+    assert.throws(()=>parseOrders(doc(card()+`<ul class="a-pagination"><li class="a-last"><a href="${href}">次へ</a></li></ul>`),base,'2026-08'),/次ページのリンク形式/,href);
+    assert.throws(()=>parseOrders(doc(card()+`<a href="${href}">次へ</a>`),base,'2026-08'),/次ページのリンク形式/,href);
+  }
+  assert.throws(()=>parseOrders(doc(card()+'<ul class="a-pagination"><li class="a-last">次へ</li></ul>'),base,'2026-08'),/次ページのリンク形式/);
+  // A disabled last-page control and a carousel alone are not pagination.
+  assert.equal(parseOrders(doc(card()+'<ul class="a-pagination"><li class="a-disabled a-last">次へ</li></ul>'),base,'2026-08').next,null);
+  assert.equal(parseOrders(doc(card()+'<div class="a-carousel-container"><a href="#">次へ</a></div>'),base,'2026-08').next,null);
+});
+test('a pager without the AUI .a-last slot is followed or fails closed, never treated as the end',async()=>{
+  const pages=[doc(card('2026年9月1日')+'<ul class="a-pagination"><li><a href="?page=1">1</a></li><li><a href="?page=2">次へ</a></li></ul>'),doc(card())];
+  const orders=await collectOrders(base,'2026-08',async()=>pages.shift(),()=>{});
+  assert.equal(orders.length,1);assert.equal(pages.length,0);
+  assert.throws(()=>parseOrders(doc(card()+'<ul class="a-pagination"><li><a href="?page=1">1</a></li></ul>'),base,'2026-08'),/次ページのリンク形式/);
+});
